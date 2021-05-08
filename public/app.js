@@ -93,6 +93,48 @@ app.client.request = function (
   xhr.send(payloadString);
 };
 
+// Bind the logout button
+app.bindLogoutButton = function () {
+  document
+    .getElementById("logoutButton")
+    .addEventListener("click", function (e) {
+      // Stop it from redirecting anywhere
+      e.preventDefault();
+
+      // Log the user out
+      app.logUserOut();
+    });
+};
+
+// Log the uesr out then redirect them
+app.logUserOut = function () {
+  console.log("clicked");
+  // Get current token id
+  var tokenId =
+    typeof app.config.sessionToken.id === "string"
+      ? app.config.sessionToken.id
+      : false;
+
+  // Send the currnt token to the tokens endpoint to delete it
+  var queryStringObject = {
+    id: tokenId,
+  };
+  app.client.request(
+    undefined,
+    "api/tokens",
+    "DELETE",
+    queryStringObject,
+    undefined,
+    function (statusCode, responsePayload) {
+      // Set the app.config token as false
+      app.setSessionToken(false);
+
+      // Send the user to te logged out page
+      window.location = "/session/deleted";
+    }
+  );
+};
+
 // Bind the forms
 app.bindForms = function () {
   if (document.querySelector("form")) {
@@ -308,6 +350,9 @@ app.tokenRenewalLoop = function () {
 app.init = function () {
   // Bind all the form submissions
   app.bindForms();
+
+  // Bind logout button
+  app.bindLogoutButton();
 
   // Get the token from localstorage
   app.getSessionToken();
