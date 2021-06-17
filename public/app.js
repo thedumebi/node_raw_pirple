@@ -107,8 +107,10 @@ app.bindLogoutButton = function () {
 };
 
 // Log the uesr out then redirect them
-app.logUserOut = function () {
-  console.log("clicked");
+app.logUserOut = function (redirectUser) {
+  // Set redirectUser t0 default to true
+  redirectUser = typeof redirectUser === "boolean" ? redirectUser : true;
+
   // Get current token id
   var tokenId =
     typeof app.config.sessionToken.id === "string"
@@ -130,7 +132,9 @@ app.logUserOut = function () {
       app.setSessionToken(false);
 
       // Send the user to te logged out page
-      window.location = "/session/deleted";
+      if (redirectUser) {
+        window.location = "/session/deleted";
+      }
     }
   );
 };
@@ -174,12 +178,15 @@ app.bindForms = function () {
           }
         }
 
+        // If the method is DELETE, the payload should be a querystringObject instead
+        var queryStringObject = method === "DELETE" ? payload : {};
+
         // Call the API
         app.client.request(
           undefined,
           path,
           method,
-          undefined,
+          queryStringObject,
           payload,
           function (statusCode, responsePayload) {
             // Display an error on the form if needed
@@ -195,9 +202,8 @@ app.bindForms = function () {
                     : "An error has occured, please try again";
 
                 // Set the formError field with the error text
-                document.querySelector(
-                  "#" + formId + " .formError"
-                ).innerHTML = error;
+                document.querySelector("#" + formId + " .formError").innerHTML =
+                  error;
 
                 // Show (unhide) the for error field on the form
                 document.querySelector(
@@ -242,9 +248,8 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
               : "Sorry, an error has occured, please try again";
 
           // Set the formError field with the error text
-          document.querySelector(
-            "#" + formId + " .formError"
-          ).innerHTML = error;
+          document.querySelector("#" + formId + " .formError").innerHTML =
+            error;
 
           // Show (unhide) the form error field on the form
           document.querySelector("#" + formId + " .formError").style.display =
@@ -269,6 +274,12 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
   if (formsWithSuccessMessages.indexOf(formId) > -1) {
     document.querySelector("#" + formId + " .formSuccess").style.display =
       "block";
+  }
+
+  // If the user just deleted their account, redirect them to the account-delete page
+  if (formId === "accountEdit3") {
+    app.logUserOut(false);
+    window.location = "/account/deleted";
   }
 };
 
