@@ -166,14 +166,42 @@ app.bindForms = function () {
         var elements = this.elements;
         for (var i = 0; i < elements.length; i++) {
           if (elements[i].type !== "submit") {
+            // Determine the class of element and set value accordingly
+            var classOfElement =
+              typeof elements[i].classList.value === "string" &&
+              elements[i].classList.value.length > 0
+                ? elements[i].classList.value
+                : "";
             var valueOfElement =
-              elements[i].type === "checkbox"
+              elements[i].type === "checkbox" &&
+              classOfElement.indexOf("multiselect") === -1
                 ? elements[i].checked
-                : elements[i].value;
-            if (elements[i].name === "_method") {
+                : classOfElement.indexOf("intval") === -1
+                ? elements[i].value
+                : parseInt(elements[i].value);
+            var elementIsChecked = elements[i].checked;
+            // override the method of the form if the input's name is _method
+            var nameOfElement = elements[i].name;
+            if (nameOfElement === "_method") {
               method = valueOfElement;
             } else {
-              payload[elements[i].name] = valueOfElement;
+              // Create a payload field named "method" if the elements name is actually httpmethod
+              if (nameOfElement == "httpmethod") {
+                nameOfElement = "method";
+              }
+              // If the element has the class "multiselect", add its value(s) as array elements
+              if (classOfElement.indexOf("multiselect") > -1) {
+                if (elementIsChecked) {
+                  payload[nameOfElement] =
+                    typeof payload[nameOfElement] === "object" &&
+                    payload[nameOfElement] instanceof Array
+                      ? payload[nameOfElement]
+                      : [];
+                  payload[nameOfElement].push(valueOfElement);
+                }
+              } else {
+                payload[nameOfElement] = valueOfElement;
+              }
             }
           }
         }
@@ -281,6 +309,11 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     app.logUserOut(false);
     window.location = "/account/deleted";
   }
+
+  // If the user just successfully created a new check, redirect back to the dashboard
+  if (formId === "checksCreate") {
+    window.location = "/checks/all";
+  }
 };
 
 // Get the session token from localstorage and set it in the app.config object
@@ -377,7 +410,9 @@ app.tokenRenewalLoop = function () {
   setInterval(function () {
     app.renewToken(function (err) {
       if (!err) {
-        console.log("Token renewed successfully @ " + Date.now());
+        console.log(
+          "Token renewed successfully @ " + Date.now().toLocaleString()
+        );
       }
     });
   }, 1000 * 60);
