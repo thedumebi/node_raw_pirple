@@ -3,6 +3,8 @@
  *
  */
 
+//  To start an app to debug use node inspect index-debug
+
 //  Dependencies
 var server = require("./lib/server");
 var workers = require("./lib/workers");
