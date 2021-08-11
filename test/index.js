@@ -101,6 +101,7 @@ _app.produceTestReport = function (limit, successes, errors) {
 
   console.log("");
   console.log("-----------END TEST REPORT-------------");
+  process.exit(0);
 };
 
 // Run the tests
