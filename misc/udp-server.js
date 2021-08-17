@@ -1,5 +1,5 @@
 /*
- * Example UDP Server
+ * Example UDP Server - user datagram protocol
  * Creating a UDP datagram server and listening on 6000
  *
  */
